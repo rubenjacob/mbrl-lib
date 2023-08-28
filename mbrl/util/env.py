@@ -3,7 +3,7 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 from abc import ABC, abstractmethod
-from typing import Dict, Optional, Tuple, Union, cast
+from typing import Dict, Optional, Tuple, Union, cast, List, Sequence
 
 import gymnasium as gym
 import hydra
@@ -282,3 +282,7 @@ class EnvHandler(ABC):
                     break
                 current_obs = next_obs
         return np.stack(real_obses), np.stack(rewards), np.stack(actions)
+
+
+def make_box(low: List[float], high: List[float], shape: Optional[Sequence[int]] = None) -> gym.spaces.Box:
+    return gym.spaces.Box(low=np.array(low), high=np.array(high), shape=shape)

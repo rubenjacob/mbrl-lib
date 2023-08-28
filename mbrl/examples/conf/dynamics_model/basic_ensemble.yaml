@@ -11,6 +11,6 @@ member_cfg:
   out_size: ???
   hid_size: 200
   deterministic: false
-  activation_fn_cfg:
+  activation_fn:
     _target_: torch.nn.SiLU
   

@@ -20,7 +20,7 @@ agent:
   _target_: mbrl.third_party.pytorch_sac_pranz24.sac.SAC
   num_inputs: ???
   action_space:
-    _target_: gym.env.Box
+    _target_: mbrl.util.env.make_box
     low: ???
     high: ???
     shape: ???
