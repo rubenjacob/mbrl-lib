@@ -4,15 +4,15 @@ metric:
   goal: maximize
   name: eval/episode_reward
 parameters:
-  model_lr:
+  overrides.model_lr:
     values: [0.001, 0.0003]
-  rollout_schedule:
+  overrides.rollout_schedule:
     values: [[20, 150, 1, 15], [20, 300, 1, 25]]
-  num_sac_updates_per_step:
+  overrides.num_sac_updates_per_step:
     values: [20, 40]
-  sac_hidden_size:
+  overrides.sac_hidden_size:
     values: [256, 512, 1024]
-  sac_lr:
+  overrides.sac_lr:
     values: [0.0003, 0.0001]
 
 command:
@@ -24,5 +24,5 @@ command:
   - experiment="mbpo_sweep_params"
   - device=cpu
   - seed=1
-  - num_steps=100000
+  - overrides.num_steps=100000
   - ${args_no_hyphens}
