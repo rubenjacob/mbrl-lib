@@ -9,6 +9,7 @@ from typing import Counter, Dict, List, Mapping, Tuple, Union
 
 import termcolor
 import torch
+import wandb
 
 LogFormatType = List[Tuple[str, str, str]]
 LogTypes = Union[int, float, torch.Tensor]
@@ -44,12 +45,13 @@ class AverageMeter(object):
 
 
 class MetersGroup(object):
-    def __init__(self, file_name: Union[str, pathlib.Path], formatting: LogFormatType):
+    def __init__(self, file_name: Union[str, pathlib.Path], formatting: LogFormatType, use_wandb: bool):
         self._csv_file_path = self._prepare_file(file_name, ".csv")
         self._formatting = formatting
         self._meters: Dict[str, AverageMeter] = collections.defaultdict(AverageMeter)
         self._csv_file = open(self._csv_file_path, "w")
         self._csv_writer = None
+        self.use_wandb = use_wandb
 
     @staticmethod
     def _prepare_file(prefix: Union[str, pathlib.Path], suffix: str) -> pathlib.Path:
@@ -98,6 +100,11 @@ class MetersGroup(object):
             data["step"] = step
             self._dump_to_csv(data)
             self._dump_to_console(data, prefix, color)
+
+            if self.use_wandb:
+                prefixed_data = {f"{prefix}/{key}": value for key, value in data.items()}
+                wandb.log(prefixed_data, step=step)
+
         self._meters.clear()
 
 
@@ -119,9 +126,10 @@ class Logger(object):
     """
 
     def __init__(
-        self, log_dir: Union[str, pathlib.Path], enable_back_compatible: bool = False
+        self, log_dir: Union[str, pathlib.Path], use_wandb: bool, enable_back_compatible: bool = False,
     ):
         self._log_dir = pathlib.Path(log_dir)
+        self.use_wandb = use_wandb
         self._groups: Dict[str, Tuple[MetersGroup, int, str]] = {}
         self._group_steps: Counter[str] = collections.Counter()
 
@@ -155,7 +163,7 @@ class Logger(object):
         if group_name in self._groups:
             print(f"Group {group_name} has already been registered.")
             return
-        new_group = MetersGroup(self._log_dir / group_name, formatting=log_format)
+        new_group = MetersGroup(self._log_dir / group_name, formatting=log_format, use_wandb=self.use_wandb)
         self._groups[group_name] = (new_group, dump_frequency, color)
         self._group_steps[group_name] = 0
 

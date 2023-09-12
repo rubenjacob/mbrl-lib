@@ -10,6 +10,8 @@ import hydra.utils
 import numpy as np
 import omegaconf
 import torch
+import wandb
+from omegaconf import OmegaConf
 
 import mbrl.constants
 import mbrl.models
@@ -133,8 +135,20 @@ def train(
     )
 
     work_dir = work_dir or os.getcwd()
+    if cfg.use_wandb:
+        run_name = f"{cfg.overrides.env_cfg.env_id}/{cfg.experiment}/{cfg.seed}"
+        wandb_config = OmegaConf.to_container(cfg=cfg, resolve=False, throw_on_missing=False)
+        run = wandb.init(
+            dir=os.environ.get("TMP", None),
+            config=wandb_config,  # type: ignore
+            project=cfg.wandb_project,
+            name=run_name,
+            reinit=True,
+            settings=wandb.Settings(start_method="fork"),
+        )
+
     # enable_back_compatible to use pytorch_sac agent
-    logger = mbrl.util.Logger(work_dir, enable_back_compatible=True)
+    logger = mbrl.util.Logger(work_dir, use_wandb=cfg.use_wandb, enable_back_compatible=True)
     logger.register_group(
         mbrl.constants.RESULTS_LOG_NAME,
         MBPO_LOG_FORMAT,
@@ -298,4 +312,8 @@ def train(
 
             env_steps += 1
             obs = next_obs
+
+    if cfg.use_wandb:
+        run.finish()
+
     return np.float32(best_eval_reward)

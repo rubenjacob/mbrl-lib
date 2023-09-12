@@ -1,0 +1,27 @@
+program: run.py
+method: grid
+metric:
+  goal: maximize
+  name: eval/episode_reward
+parameters:
+  model_lr:
+    values: [0.001, 0.0003]
+  rollout_schedule:
+    values: [[20, 150, 1, 15], [20, 300, 1, 25]]
+  num_sac_updates_per_step:
+    values: [20, 40]
+  sac_hidden_size:
+    values: [256, 512, 1024]
+  sac_lr:
+    values: [0.0003, 0.0001]
+
+command:
+  - ${env}
+  - ${interpreter}
+  - ${program}
+  - algorithm=mbpo
+  - overrides=mbpo_boxpushing_dense
+  - device=cpu
+  - seed=1
+  - num_steps=1000000
+  - ${args_no_hyphens}
