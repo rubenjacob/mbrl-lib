@@ -156,7 +156,7 @@ def train(
         dump_frequency=1,
     )
     save_video = cfg.get("save_video", False)
-    video_recorder = VideoRecorder(work_dir if save_video else None)
+    video_recorder = VideoRecorder(work_dir if save_video else None, use_wandb=cfg.use_wandb)
 
     rng = np.random.default_rng(seed=cfg.seed)
     torch_generator = torch.Generator(device=cfg.device)
