@@ -21,7 +21,8 @@ command:
   - ${program}
   - algorithm=mbpo
   - overrides=mbpo_boxpushing_dense
+  - experiment="mbpo_sweep_params"
   - device=cpu
   - seed=1
-  - num_steps=1000000
+  - num_steps=100000
   - ${args_no_hyphens}

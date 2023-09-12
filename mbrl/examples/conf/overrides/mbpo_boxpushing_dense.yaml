@@ -7,7 +7,7 @@ env_cfg:
   env_id: "BoxPushingDense-v0"
   seed: ${seed}
 
-num_steps: 125000
+num_steps: 300000
 epoch_length: 1000
 num_elites: 5
 patience: 5
