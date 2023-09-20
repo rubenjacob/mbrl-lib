@@ -103,7 +103,8 @@ class MetersGroup(object):
 
             if self.use_wandb:
                 prefixed_data = {f"{prefix}/{key}": value for key, value in data.items()}
-                wandb.log(prefixed_data, step=step)
+                prefixed_data.update({f"{prefix}/step": step})
+                wandb.log(prefixed_data)
 
         self._meters.clear()
 
@@ -166,6 +167,10 @@ class Logger(object):
         new_group = MetersGroup(self._log_dir / group_name, formatting=log_format, use_wandb=self.use_wandb)
         self._groups[group_name] = (new_group, dump_frequency, color)
         self._group_steps[group_name] = 0
+
+        if self.use_wandb:
+            wandb.define_metric(f"{group_name}/step")
+            wandb.define_metric(f"{group_name}/*", step_metric=f"{group_name}/step")
 
     def log_histogram(self, *_args):
         pass

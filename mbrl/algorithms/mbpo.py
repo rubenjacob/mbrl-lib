@@ -3,7 +3,7 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 import os
-from typing import Optional, Sequence, cast
+from typing import Optional, Sequence, cast, Tuple
 
 import gymnasium as gym
 import hydra.utils
@@ -70,21 +70,29 @@ def evaluate(
     agent: SACAgent,
     num_episodes: int,
     video_recorder: VideoRecorder,
-) -> float:
+) -> Tuple[float, float]:
     avg_episode_reward = 0.0
+    success_list = list()
     for episode in range(num_episodes):
         obs, _ = env.reset()
         video_recorder.init(enabled=(episode == 0))
         terminated = False
         truncated = False
         episode_reward = 0.0
+        ep_success_list = list()
         while not terminated and not truncated:
             action = agent.act(obs)
-            obs, reward, terminated, truncated, _ = env.step(action)
+            obs, reward, terminated, truncated, info = env.step(action)
             video_recorder.record(env)
             episode_reward += reward
+            is_success = info.get("is_success", None) or info.get("success", None)
+            if is_success is not None:
+                ep_success_list.append(is_success)
+
         avg_episode_reward += episode_reward
-    return avg_episode_reward / num_episodes
+        success_list.append(any(ep_success_list))
+
+    return avg_episode_reward / num_episodes, sum(success_list) / num_episodes
 
 
 def maybe_replace_sac_buffer(
@@ -290,7 +298,7 @@ def train(
 
             # ------ Epoch ended (evaluate and save model) ------
             if (env_steps + 1) % cfg.overrides.epoch_length == 0:
-                avg_reward = evaluate(
+                avg_reward, avg_success = evaluate(
                     test_env, agent, cfg.algorithm.num_eval_episodes, video_recorder
                 )
                 logger.log_data(
@@ -300,6 +308,7 @@ def train(
                         "env_step": env_steps,
                         "episode_reward": avg_reward,
                         "rollout_length": rollout_length,
+                        "success_rate": avg_success,
                     },
                 )
                 if avg_reward > best_eval_reward:
